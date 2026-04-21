@@ -38,7 +38,7 @@ app.get('/bella', (req, res) => {
   });
 
   app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'admin.html'));
+    res.sendFile(path.join(__dirname, '..', '..', 'website', 'index.html'));
   });
 
   app.listen(PORT, () => {
