@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bella Mamma Pizza</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #e63946;
+            --primary-dark: #c1121f;
+            --secondary: #f4a261;
+            --dark: #1d3557;
+            --light: #f1faee;
+            --cream: #fefae0;
+            --success: #2a9d8f;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cart-btn {
+            position: relative;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cart-badge {
+            background: white;
+            color: var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 70px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 60px 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(32px, 8vw, 48px);
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .hero-btn {
+            background: white;
+            color: var(--primary);
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .hero-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Menu Section */
+        .menu-section {
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--dark);
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-tab {
+            background: white;
+            border: 2px solid #eee;
+            padding: 10px 20px;
+            border-radius: 25px;
+            white-space: nowrap;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .pizza-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+
+        .pizza-card:active {
+            transform: scale(0.98);
+        }
+
+        .pizza-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .pizza-info {
+            padding: 20px;
+        }
+
+        .pizza-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .pizza-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .pizza-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pizza-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .add-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Cart Sidebar */
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 2000;
+            transition: right 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-sidebar.open {
+            right: 0;
+        }
+
+        .cart-header {
+            padding: 20px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-header h2 {
+            font-size: 20px;
+        }
+
+        .close-cart {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-options {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .cart-item-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-item-price {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .cart-footer {
+            padding: 20px;
+            border-top: 2px solid #eee;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .checkout-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Customizer Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 3000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .customizer {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            border-radius: 30px 30px 0 0;
+            overflow-y: auto;
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .customizer-header {
+            padding: 20px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+        }
+
+        .customizer-body {
+            padding: 20px;
+        }
+
+        .customizer-pizza {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .customizer-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 15px;
+            object-fit: cover;
+        }
+
+        .customizer-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .customizer-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .option-group {
+            margin-bottom: 25px;
+        }
+
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #666;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            background: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary);
+            background: rgba(230, 57, 70, 0.1);
+        }
+
+        .option-btn span {
+            display: block;
+        }
+
+        .option-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .option-price {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .toppings-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .topping-btn {
+            padding: 8px 15px;
+            border: 2px solid #eee;
+            border-radius: 20px;
+            background: white;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .topping-btn.selected {
+            border-color: var(--success);
+            background: rgba(42, 157, 143, 0.1);
+        }
+
+        .customizer-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 15px;
+        }
+
+        .total-price {
+            flex: 1;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .add-to-cart-btn {
+            flex: 1;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Empty Cart */
+        .empty-cart {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-cart-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .hero {
+                padding: 40px 15px;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .menu-section {
+                padding: 30px 15px;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pizza-card {
+                border-radius: 15px;
+            }
+
+            .customizer {
+                max-height: 85vh;
+            }
+
+            .option-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1500;
+            display: none;
+        }
+
+        .overlay.open {
+            display: block;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: 600;
+            z-index: 4000;
+            animation: fadeInUp 0.3s;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Features */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 30px 20px;
+            background: white;
+            flex-wrap: wrap;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .feature-text {
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">Bella Mamma</div>
+        <div class="header-actions">
+            <button class="cart-btn" onclick="openCart()">
+                🛒 Cart
+                <span class="cart-badge" id="cartBadge">0</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>🍕 Authentic Italian Pizza</h1>
+        "Hand-tossed, wood-fired perfection delivered to your door"
+        <button class="hero-btn" onclick="scrollToMenu()">Order Now</button>
+    </section>
+
+    <div class="features">
+        <div class="feature">
+            <div class="feature-icon">🔥</div>
+            <div class="feature-text">Wood-Fired</div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🚚</div>
+            <div class="feature-text">Fast Delivery</div>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🧀</div>
+            <div class="feature-text">Fresh Ingredients</div>
+        </div>
+    </div>
+
+    <section class="menu-section" id="menu">
+        <h2 class="section-title">Our Pizzas</h2>
+        
+        <div class="category-tabs">
+            <button class="category-tab active" onclick="filterPizzas('all')">All</button>
+            <button class="category-tab" onclick="filterPizzas('signature')">Signature</button>
+            <button class="category-tab" onclick="filterPizzas('meat')">Meat Lovers</button>
+            <button class="category-tab" onclick="filterPizzas('veggie')">Veggie</button>
+        </div>
+
+        <div class="menu-grid" id="menuGrid">
+            <div class="pizza-card">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80" alt="Pizza" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-name">Loading...</div>
+                    <div class="pizza-desc">Loading menu...</div>
+                    <div class="pizza-footer">
+                        <span class="pizza-price">R0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Sidebar -->
+    <div class="overlay" id="overlay" onclick="closeCart()"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h2>🛒 Your Cart</h2>
+            <button class="close-cart" onclick="closeCart()">✕</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="empty-cart">
+                <div class="empty-cart-icon">🛒</div>
+                <p>Your cart is empty</p>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">R0</span>
+            </div>
+            <button class="checkout-btn" onclick="checkout()">Checkout</button>
+        </div>
+    </div>
+
+    <!-- Customizer Modal -->
+    <div class="modal-overlay" id="customizer">
+        <div class="customizer">
+            <div class="customizer-header">
+                <h3>Customize Pizza</h3>
+                <button class="close-cart" onclick="closeCustomizer()">✕</button>
+            </div>
+            <div class="customizer-body" id="customizerBody">
+                <!-- Dynamic content -->
+            </div>
+            <div class="customizer-footer">
+                <div class="total-price" id="customizerTotal">R0</div>
+                <button class="add-to-cart-btn" onclick="addToCartFromCustomizer()">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast" style="display:none;">Added to cart!</div>
+
+    <script>
+        let menuData = null;
+        let cart = JSON.parse(localStorage.getItem('bellaCart')) || [];
+        let currentPizza = null;
+        let customizerSelections = {};
+
+        const API_URL = '/api';
+
+        async function loadMenu() {
+            try {
+                const res = await fetch(`${API_URL}/menu`);
+                menuData = await res.json();
+                renderMenu(menuData.pizzas);
+            } catch (e) {
+                console.error('Failed to load menu:', e);
+                document.getElementById('menuGrid').innerHTML = '<p style="text-align:center;grid-column:1/-1;">Failed to load menu. Please refresh.</p>';
+            }
+        }
+
+        function renderMenu(pizzas) {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = pizzas.map(pizza => `
+                <div class="pizza-card">
+                    <img src="${pizza.image_url || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80'}" alt="${pizza.name}" class="pizza-img">
+                    <div class="pizza-info">
+                        <div class="pizza-name">${pizza.name}</div>
+                        <div class="pizza-desc">${pizza.description || ''}</div>
+                        <div class="pizza-footer">
+                            <span class="pizza-price">R${pizza.base_price}</span>
+                            <button class="add-btn" onclick="openCustomizer(${pizza.id})">Order</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterPizzas(category) {
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (category === 'all') {
+                renderMenu(menuData.pizzas);
+            } else {
+                renderMenu(menuData.pizzas.filter(p => p.category === category));
+            }
+        }
+
+        function scrollToMenu() {
+            document.getElementById('menu').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Cart Functions
+        function openCart() {
+            document.getElementById('cartSidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('open');
+            renderCart();
+        }
+
+        function closeCart() {
+            document.getElementById('cartSidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('open');
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                container.innerHTML = '<div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>Your cart is empty</p></div>';
+            } else {
+                container.innerHTML = cart.map((item, index) => `
+                    <div class="cart-item">
+                        <img src="${item.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80'}" class="cart-item-img">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-options">${item.size} | ${item.crust}</div>
+                            <div class="cart-item-bottom">
+                                <span class="cart-item-price">R${item.price}</span>
+                                <div class="qty-controls">
+                                    <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+                                    <span>${item.quantity}</span>
+                                    <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            updateCartTotal();
+        }
+
+        function updateCartTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('cartTotal').textContent = `R${total.toFixed(2)}`;
+            document.getElementById('cartBadge').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+        }
+
+        function updateQty(index, delta) {
+            cart[index].quantity += delta;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            saveCart();
+            renderCart();
+        }
+
+        function saveCart() {
+            localStorage.setItem('bellaCart', JSON.stringify(cart));
+        }
+
+        // Customizer
+        function openCustomizer(pizzaId) {
+            currentPizza = menuData.pizzas.find(p => p.id === pizzaId);
+            customizerSelections = {
+                size: menuData.options.sizes[1],
+                crust: menuData.options.crusts[0],
+                sauce: menuData.options.sauces[0],
+                cheese: menuData.options.cheeses[0],
+                toppings: []
+            };
+            renderCustomizer();
+            document.getElementById('customizer').classList.add('open');
+        }
+
+        function closeCustomizer() {
+            document.getElementById('customizer').classList.remove('open');
+        }
+
+        function renderCustomizer() {
+            const options = menuData.options;
+            
+            document.getElementById('customizerBody').innerHTML = `
+                <div class="customizer-pizza">
+                    <img src="${currentPizza.image_url || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80'}" class="customizer-img">
+                    <div>
+                        <div class="customizer-title">${currentPizza.name}</div>
+                        <div class="customizer-price">R${currentPizza.base_price}</div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <div class="option-title">Size</div>
+                    <div class="option-grid">
+                        ${options.sizes.map((s, i) => `
+                            <button class="option-btn ${customizerSelections.size?.id === s.id ? 'selected' : ''}" onclick="selectOption('size', ${JSON.stringify(s).replace(/"/g, '&quot;')})">
+                                <span class="option-name">${s.name}</span>
+                                <span class="option-price">${s.price_modifier > 0 ? '+R' + s.price_modifier : 'Included'}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <div class="option-title">Crust</div>
+                    <div class="option-grid">
+                        ${options.crusts.map(c => `
+                            <button class="option-btn ${customizerSelections.crust?.id === c.id ? 'selected' : ''}" onclick="selectOption('crust', ${JSON.stringify(c).replace(/"/g, '&quot;')})">
+                                <span class="option-name">${c.name}</span>
+                                <span class="option-price">${c.price_modifier > 0 ? '+R' + c.price_modifier : 'Included'}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <div class="option-title">Extra Toppings</div>
+                    <div class="toppings-list">
+                        ${options.toppings.map(t => `
+                            <button class="topping-btn ${customizerSelections.toppings.find(tp => tp.id === t.id) ? 'selected' : ''}" onclick="toggleTopping(${JSON.stringify(t).replace(/"/g, '&quot;')})">
+                                ${t.name} +R${t.price_modifier}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            updateCustomizerTotal();
+        }
+
+        function selectOption(type, value) {
+            customizerSelections[type] = value;
+            renderCustomizer();
+        }
+
+        function toggleTopping(topping) {
+            const index = customizerSelections.toppings.findIndex(t => t.id === topping.id);
+            if (index > -1) {
+                customizerSelections.toppings.splice(index, 1);
+            } else {
+                customizerSelections.toppings.push(topping);
+            }
+            renderCustomizer();
+        }
+
+        function updateCustomizerTotal() {
+            let total = currentPizza.base_price;
+            if (customizerSelections.size) total += customizerSelections.size.price_modifier;
+            if (customizerSelections.crust) total += customizerSelections.crust.price_modifier;
+            if (customizerSelections.cheese) total += customizerSelections.cheese.price_modifier;
+            customizerSelections.toppings.forEach(t => total += t.price_modifier);
+            
+            document.getElementById('customizerTotal').textContent = `R${total.toFixed(2)}`;
+            customizerSelections.total = total;
+        }
+
+        function addToCartFromCustomizer() {
+            const item = {
+                name: currentPizza.name,
+                image: currentPizza.image_url,
+                price: customizerSelections.total,
+                quantity: 1,
+                size: customizerSelections.size?.name || '',
+                crust: customizerSelections.crust?.name || '',
+                toppings: customizerSelections.toppings.map(t => t.name).join(', ')
+            };
+            
+            cart.push(item);
+            saveCart();
+            closeCustomizer();
+            updateCartTotal();
+            showToast();
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 2000);
+        }
+
+        async function checkout() {
+            if (cart.length === 0) return;
+            
+            const order = {
+                items: cart,
+                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            };
+            
+            alert('Order placed! Total: R' + order.total.toFixed(2));
+            cart = [];
+            saveCart();
+            closeCart();
+        }
+
+        // Initialize
+        loadMenu();
+        updateCartTotal();
+    </script>
+</body>
+</html>
