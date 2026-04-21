@@ -1,37 +1,19 @@
 {
-  "name": "bella-mamma-pizza",
+  "name": "bella-mamma-desktop",
   "version": "1.0.0",
-  "description": "Bella Mamma Pizza Desktop App",
+  "description": "Bella Mamma Desktop App - Order Management",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder --win portable"
-  },
-  "build": {
-    "appId": "com.bellamamma.pizza",
-    "productName": "Bella Mamma Pizza",
-    "directories": {
-      "output": "dist"
-    },
-    "win": {
-      "target": "portable"
-    },
-    "files": [
-      "main.js",
-      "bella-mamma.html",
-      "bella-mamma-backend/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "bella-mamma-backend",
-        "to": "bella-mamma-backend"
-      }
-    ]
-  },
-  "dependencies": {
-    "electron": "^28.0.0"
+    "start": "electron ."
   },
   "devDependencies": {
-    "electron-builder": "^24.0.0"
+    "electron": "^28.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sql.js": "^1.10.3",
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
   }
 }

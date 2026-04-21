@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;">
+    <title>Bella Mamma - Orders</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #e63946;
+            --primary-dark: #c1121f;
+            --secondary: #f4a261;
+            --dark: #1d3557;
+            --light: #f1faee;
+            --success: #2a9d8f;
+            --warning: #f4a261;
+            --info: #457b9d;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: var(--dark);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--dark), var(--primary));
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.ready {
+            background: var(--success);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .toolbar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 20px 30px;
+            background: white;
+        }
+
+        .stat-card {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .orders-container {
+            padding: 20px 30px;
+        }
+
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .order-header {
+            background: var(--dark);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-id {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .order-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: var(--warning);
+            color: var(--dark);
+        }
+
+        .status-preparing {
+            background: var(--info);
+            color: white;
+        }
+
+        .status-ready {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-delivered {
+            background: #666;
+            color: white;
+        }
+
+        .order-body {
+            padding: 15px;
+        }
+
+        .customer-info {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .customer-details {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .order-items {
+            margin-bottom: 15px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item-name {
+            flex: 1;
+        }
+
+        .order-item-qty {
+            color: #666;
+            margin-right: 15px;
+        }
+
+        .order-item-price {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .order-footer {
+            background: #f9f9f9;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-total {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .last-updated {
+            text-align: center;
+            padding: 10px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .refresh-indicator.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍕 Bella Mamma - Order Manager</h1>
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn btn-primary" onclick="refreshOrders()">🔄 Refresh Orders</button>
+        <button class="btn btn-secondary" onclick="openWebsite()">🌐 Open Website</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="pendingCount">0</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="preparingCount">0</div>
+            <div class="stat-label">Preparing</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="readyCount">0</div>
+            <div class="stat-label">Ready</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalCount">0</div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+    </div>
+
+    <div class="orders-container">
+        <div class="orders-grid" id="ordersGrid">
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <p>Loading orders...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="last-updated" id="lastUpdated"></div>
+    <div class="refresh-indicator" id="refreshIndicator">Refreshing...</div>
+
+    <script>
+        let orders = [];
+        let refreshInterval;
+
+        async function loadOrders() {
+            try {
+                orders = await window.api.getOrders();
+                renderOrders();
+                updateStats();
+                document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+            } catch (err) {
+                console.error('Failed to load orders:', err);
+            }
+        }
+
+        function renderOrders() {
+            const grid = document.getElementById('ordersGrid');
+            
+            if (!orders || orders.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No orders yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">Order #${order.id}</span>
+                        <span class="order-status status-${order.status}">${order.status}</span>
+                    </div>
+                    <div class="order-body">
+                        <div class="customer-info">
+                            <div class="customer-name">${order.customer?.name || 'Unknown'}</div>
+                            <div class="customer-details">
+                                📞 ${order.customer?.phone || 'N/A'}<br>
+                                📍 ${order.customer?.address || 'N/A'}
+                            </div>
+                        </div>
+                        <div class="order-items">
+                            ${renderOrderItems(order.items)}
+                        </div>
+                    </div>
+                    <div class="order-footer">
+                        <span class="order-total">R${parseFloat(order.total || 0).toFixed(2)}</span>
+                        <div class="order-actions">
+                            ${getActionButtons(order)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOrderItems(items) {
+            if (!items) return '<p>No items</p>';
+            
+            const itemList = Array.isArray(items) ? items : JSON.parse(items);
+            return itemList.map(item => `
+                <div class="order-item">
+                    <span class="order-item-name">${item.name}</span>
+                    <span class="order-item-qty">x${item.quantity}</span>
+                    <span class="order-item-price">R${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        function getActionButtons(order) {
+            const buttons = [];
+            
+            if (order.status === 'pending') {
+                buttons.push(`<button class="btn btn-primary btn-small" onclick="updateStatus(${order.id}, 'preparing')">Start</button>`);
+            }
+            if (order.status === 'preparing') {
+                buttons.push(`<button class="btn btn-primary btn-small" onclick="updateStatus(${order.id}, 'ready')">Ready</button>`);
+            }
+            if (order.status === 'ready') {
+                buttons.push(`<button class="btn btn-secondary btn-small" onclick="updateStatus(${order.id}, 'delivered')">Delivered</button>`);
+            }
+            
+            return buttons.join('');
+        }
+
+        async function updateStatus(orderId, status) {
+            try {
+                await window.api.updateOrderStatus(orderId, status);
+                await loadOrders();
+            } catch (err) {
+                console.error('Failed to update status:', err);
+                alert('Failed to update order status');
+            }
+        }
+
+        function updateStats() {
+            const pending = orders.filter(o => o.status === 'pending').length;
+            const preparing = orders.filter(o => o.status === 'preparing').length;
+            const ready = orders.filter(o => o.status === 'ready').length;
+            const total = orders.length;
+
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('preparingCount').textContent = preparing;
+            document.getElementById('readyCount').textContent = ready;
+            document.getElementById('totalCount').textContent = total;
+        }
+
+        function refreshOrders() {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.classList.add('show');
+            loadOrders().finally(() => {
+                setTimeout(() => indicator.classList.remove('show'), 500);
+            });
+        }
+
+        async function openWebsite() {
+            const url = await window.api.getBackendUrl();
+            require('electron').shell.openExternal(url);
+        }
+
+        window.api.onBackendReady((url) => {
+            document.getElementById('statusDot').classList.add('ready');
+            document.getElementById('statusText').textContent = 'Connected';
+            console.log('Backend ready at:', url);
+            loadOrders();
+            
+            refreshInterval = setInterval(loadOrders, 5000);
+        });
+
+        window.api.onRefreshOrders(() => {
+            refreshOrders();
+        });
+
+        loadOrders();
+    </script>
+</body>
+</html>
