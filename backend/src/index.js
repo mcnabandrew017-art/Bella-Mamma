@@ -23,7 +23,8 @@ const startServer = async () => {
   await seedAdmin();
 
   app.use(express.static(path.join(__dirname, '..')));
-app.get('/bella', (req, res) => {
+  app.use(express.static(path.join(__dirname, '..', '..', 'website')));
+  app.get('/bella', (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'bella-mamma.html'));
   });
 
