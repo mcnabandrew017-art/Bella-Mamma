@@ -42,7 +42,7 @@ app.get('/bella', (req, res) => {
   });
 
   app.listen(PORT, () => {
-    console.log(`Bella Mamma Admin: http://localhost:${PORT}`);
+    console.log(`Bella Mamma: http://localhost:${PORT}`);
     console.log(`API: http://localhost:${PORT}/api/*`);
   });
 };
