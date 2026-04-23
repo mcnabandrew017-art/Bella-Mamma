@@ -9,6 +9,10 @@ const calculatePrice = (item) => {
   const db = getDb();
   let price = 0;
 
+  if (item.price) {
+    return item.price;
+  }
+
   if (item.pizza_id) {
     const pizza = db.get('SELECT base_price FROM pizzas WHERE id = ?', [item.pizza_id]);
     price += pizza ? pizza.base_price : 0;
@@ -48,38 +52,44 @@ const buildOrderItemsWithNames = (db, orderId) => {
   return items.map(item => {
     let itemName = 'Custom Pizza';
 
-    if (item.pizza_id) {
-      const pizza = db.get('SELECT name FROM pizzas WHERE id = ?', [item.pizza_id]);
-      if (pizza) itemName = pizza.name;
-    }
+    if (item.name) {
+      itemName = item.name;
+    } else {
+      if (item.pizza_id) {
+        const pizza = db.get('SELECT name FROM pizzas WHERE id = ?', [item.pizza_id]);
+        if (pizza) itemName = pizza.name;
+      }
 
-    if (item.size_id) {
-      const size = db.get('SELECT name FROM sizes WHERE id = ?', [item.size_id]);
-      if (size) itemName += ` (${size.name})`;
-    }
+      if (item.size_id) {
+        const size = db.get('SELECT name FROM sizes WHERE id = ?', [item.size_id]);
+        if (size) itemName += ` (${size.name})`;
+      }
 
-    if (item.crust_id) {
-      const crust = db.get('SELECT name FROM crusts WHERE id = ?', [item.crust_id]);
-      if (crust) itemName += ` ${crust.name} crust`;
-    }
+      if (item.crust_id) {
+        const crust = db.get('SELECT name FROM crusts WHERE id = ?', [item.crust_id]);
+        if (crust) itemName += ` ${crust.name} crust`;
+      }
 
-    if (item.sauce_id) {
-      const sauce = db.get('SELECT name FROM sauces WHERE id = ?', [item.sauce_id]);
-      if (sauce) itemName += ` with ${sauce.name} sauce`;
-    }
+      if (item.sauce_id) {
+        const sauce = db.get('SELECT name FROM sauces WHERE id = ?', [item.sauce_id]);
+        if (sauce) itemName += ` with ${sauce.name} sauce`;
+      }
 
-    if (item.cheese_id) {
-      const cheese = db.get('SELECT name FROM cheeses WHERE id = ?', [item.cheese_id]);
-      if (cheese) itemName += `, ${cheese.name} cheese`;
-    }
+      if (item.cheese_id) {
+        const cheese = db.get('SELECT name FROM cheeses WHERE id = ?', [item.cheese_id]);
+        if (cheese) itemName += `, ${cheese.name} cheese`;
+      }
 
-    if (item.toppings) {
-      const toppingIds = JSON.parse(item.toppings);
-      if (toppingIds.length > 0) {
-        const placeholders = toppingIds.map(() => '?').join(',');
-        const toppingNames = db.all(`SELECT name FROM toppings WHERE id IN (${placeholders})`, toppingIds);
-        const names = toppingNames.map(t => t.name).join(', ');
-        if (names) itemName += ` + ${names}`;
+      if (item.toppings) {
+        try {
+          const toppingIds = JSON.parse(item.toppings);
+          if (toppingIds.length > 0) {
+            const placeholders = toppingIds.map(() => '?').join(',');
+            const toppingNames = db.all(`SELECT name FROM toppings WHERE id IN (${placeholders})`, toppingIds);
+            const names = toppingNames.map(t => t.name).join(', ');
+            if (names) itemName += ` + ${names}`;
+          }
+        } catch (e) {}
       }
     }
 
@@ -139,12 +149,12 @@ router.post('/', validateOrder, (req, res) => {
     const orderId = orderResult.lastInsertRowid;
 
     orderItems.forEach(item => {
-      const toppings = item.topping_ids ? JSON.stringify(item.topping_ids) : null;
+      const toppings = item.topping_ids ? JSON.stringify(item.topping_ids) : item.toppings || null;
       db.run(`
-        INSERT INTO order_items (order_id, pizza_id, size_id, crust_id, sauce_id, cheese_id, toppings, quantity, unit_price, item_total)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO order_items (order_id, pizza_id, size_id, crust_id, sauce_id, cheese_id, toppings, quantity, unit_price, item_total, name)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [orderId, item.pizza_id || null, item.size_id || null, item.crust_id || null,
-        item.sauce_id || null, item.cheese_id || null, toppings, item.quantity, item.unit_price, item.item_total]);
+        item.sauce_id || null, item.cheese_id || null, toppings, item.quantity, item.unit_price || item.price, item.item_total || (item.price * item.quantity), item.name || null]);
     });
 
     saveDb();

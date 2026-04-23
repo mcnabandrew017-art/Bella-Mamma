@@ -149,6 +149,7 @@ const initDb = async () => {
       quantity INTEGER NOT NULL,
       unit_price REAL NOT NULL,
       item_total REAL NOT NULL,
+      name TEXT,
       FOREIGN KEY (order_id) REFERENCES orders(id),
       FOREIGN KEY (pizza_id) REFERENCES pizzas(id),
       FOREIGN KEY (size_id) REFERENCES sizes(id),
@@ -157,6 +158,10 @@ const initDb = async () => {
       FOREIGN KEY (cheese_id) REFERENCES cheeses(id)
     )
   `);
+
+  try {
+    db.run("ALTER TABLE order_items ADD COLUMN name TEXT");
+  } catch (e) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS users (

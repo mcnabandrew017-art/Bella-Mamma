@@ -13,9 +13,6 @@ const validateOrder = (req, res, next) => {
     if (!item.quantity || item.quantity < 1) {
       return res.status(400).json({ error: 'Each item must have quantity >= 1' });
     }
-    if (!item.pizza_id && (!item.size_id || !item.crust_id)) {
-      return res.status(400).json({ error: 'Item must have pizza_id or size_id + crust_id' });
-    }
   }
 
   req.orderData = { customer_id, order_type, items, delivery_fee, customer_info };
