@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Display - Bella Mamma</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d0d; color: #fff; min-height: 100vh; }
+        
+        .header { background: linear-gradient(135deg, #ff6b35, #f7c548); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .header h1 { color: #fff; font-size: 28px; font-weight: 700; }
+        .header .tag { background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 25px; font-size: 14px; font-weight: 600; }
+        
+        .stats-bar { display: flex; gap: 20px; padding: 20px 30px; background: #1a1a1a; flex-wrap: wrap; }
+        .stat { text-align: center; padding: 15px 30px; background: #252525; border-radius: 12px; min-width: 120px; }
+        .stat .number { font-size: 36px; font-weight: 700; }
+        .stat .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+        .stat.pending .number { color: #f7c548; }
+        .stat.preparing .number { color: #3498db; }
+        .stat.ready .number { color: #2ecc71; }
+        .stat.time .number { color: #e94560; }
+        
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 30px; }
+        
+        .order-card { background: #1a1a1a; border-radius: 16px; overflow: hidden; transition: all 0.3s; border: 3px solid transparent; }
+        .order-card:hover { transform: translateY(-2px); }
+        
+        .order-card.pending { border-color: #f7c548; }
+        .order-card.preparing { border-color: #3498db; }
+        .order-card.ready { border-color: #2ecc71; }
+        
+        .order-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .order-card.pending .order-header { background: rgba(247, 197, 72, 0.15); }
+        .order-card.preparing .order-header { background: rgba(52, 152, 219, 0.15); }
+        .order-card.ready .order-header { background: rgba(46, 204, 113, 0.15); }
+        
+        .order-id { font-size: 24px; font-weight: 700; }
+        .order-status { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .status-pending { background: #f7c548; color: #000; }
+        .status-preparing { background: #3498db; color: #fff; }
+        .status-ready { background: #2ecc71; color: #fff; }
+        
+        .order-info { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; gap: 20px; font-size: 14px; color: #888; }
+        .order-info span { display: flex; align-items: center; gap: 6px; }
+        .order-info .value { color: #fff; font-weight: 600; }
+        
+        .order-items { padding: 20px; }
+        .order-item { background: #252525; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        .order-item:last-child { margin-bottom: 0; }
+        .item-name { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .item-details { font-size: 13px; color: #888; }
+        .item-details span { display: block; margin-top: 4px; }
+        
+        .order-footer { padding: 15px 20px; background: #151515; }
+        .time-elapsed { font-size: 13px; color: #888; margin-bottom: 10px; }
+        .time-elapsed .time { color: #e94560; font-weight: 600; font-size: 16px; }
+        .time-elapsed.over-15 .time { color: #e74c3c; animation: pulse 1s infinite; }
+        
+        .btn-group { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-start { background: #3498db; color: #fff; }
+        .btn-start:hover { background: #2980b9; }
+        .btn-ready { background: #2ecc71; color: #fff; }
+        .btn-ready:hover { background: #27ae60; }
+        .btn-complete { background: #9b59b6; color: #fff; }
+        .btn-complete:hover { background: #8e44ad; }
+        .btn-bump { background: #e94560; color: #fff; }
+        .btn-bump:hover { background: #c0392b; }
+        
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: #555; }
+        .empty-state .icon { font-size: 80px; margin-bottom: 20px; }
+        .empty-state h2 { font-size: 24px; margin-bottom: 10px; color: #777; }
+        
+        .filter-bar { padding: 15px 30px; background: #151515; display: flex; gap: 10px; }
+        .filter-btn { padding: 10px 20px; border: 2px solid #333; background: transparent; color: #888; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .filter-btn:hover { border-color: #555; color: #fff; }
+        .filter-btn.active { border-color: #ff6b35; background: #ff6b35; color: #fff; }
+        
+        .sound-toggle { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; border: none; background: #252525; color: #888; font-size: 24px; cursor: pointer; transition: all 0.3s; z-index: 100; }
+        .sound-toggle:hover { background: #ff6b35; color: #fff; }
+        .sound-toggle.muted { color: #e74c3c; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .order-card { animation: slideIn 0.3s ease; }
+        
+        .connection-status { position: fixed; top: 80px; right: 20px; padding: 10px 20px; border-radius: 8px; font-size: 12px; font-weight: 600; z-index: 100; display: none; }
+        .connection-status.offline { background: #e74c3c; color: #fff; display: block; }
+        .connection-status.online { background: #2ecc71; color: #fff; display: block; }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus"></div>
+    
+    <div class="header">
+        <h1>Kitchen Display</h1>
+        <span class="tag" id="clock">--:--:--</span>
+    </div>
+    
+    <div class="stats-bar">
+        <div class="stat pending">
+            <div class="number" id="pendingCount">0</div>
+            <div class="label">Pending</div>
+        </div>
+        <div class="stat preparing">
+            <div class="number" id="preparingCount">0</div>
+            <div class="label">Preparing</div>
+        </div>
+        <div class="stat ready">
+            <div class="number" id="readyCount">0</div>
+            <div class="label">Ready</div>
+        </div>
+        <div class="stat time">
+            <div class="number" id="avgTime">0</div>
+            <div class="label">Avg (min)</div>
+        </div>
+    </div>
+    
+    <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+        <button class="filter-btn" data-filter="preparing">Preparing</button>
+        <button class="filter-btn" data-filter="ready">Ready</button>
+    </div>
+    
+    <div class="orders-grid" id="ordersGrid">
+        <div class="empty-state">
+            <div class="icon">🍕</div>
+            <h2>No Active Orders</h2>
+            <p>New orders will appear here automatically</p>
+        </div>
+    </div>
+    
+    <button class="sound-toggle" id="soundToggle" title="Toggle Sound">🔔</button>
+    
+    <audio id="newOrderSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleU4eXq/w/odJOWiRyfT+oHQmWofN9/+SSzxgk9L2/5R7NlqQ0/j/mk00Y5LU+P+YYjNfj9X5/5tcMFqO1vr/m1cwW5DX+v+bVy9ckNj7/5tWL1yR2Pv/m1UuW5HY+/+bVC1bkdj7/5pTLVqR2Pv/mlIsWpHY+/+aUixakdj7/5pSK1qR2Pv/mlIqWpHY+/+aUipakdj7/5pSKVqR2Pv/mlIpWpHY+/+aUilakdj7/5pSKVqR2Pv/mlIpWpHY+/+aUilakdj7/5pSKVqR2Pv/mlIpWpHY+/+aUilakdj7/5pSKVqR2Pv/mlIpWpHY+/+aUilakdj7/5pSKVqR2Pv/mlIpWpHY+/+aUilakdj7/5pSKVqR2Pv/mlIpWpHY+/+aUila" type="audio/wav">
+    </audio>
+    
+    <script>
+        const API = 'http://localhost:3000/api/kitchen';
+        let orders = [];
+        let currentFilter = 'all';
+        let soundEnabled = true;
+        let lastOrderCount = 0;
+        let refreshInterval;
+        
+        async function fetchOrders() {
+            try {
+                const res = await fetch(`${API}/orders`);
+                if (!res.ok) throw new Error();
+                orders = await res.json();
+                
+                if (orders.length > lastOrderCount && lastOrderCount > 0) {
+                    playSound();
+                }
+                lastOrderCount = orders.length;
+                
+                updateStats();
+                renderOrders();
+                setConnectionStatus(true);
+            } catch (e) {
+                setConnectionStatus(false);
+            }
+        }
+        
+        async function fetchStats() {
+            try {
+                const res = await fetch(`${API}/stats`);
+                const stats = await res.json();
+                document.getElementById('pendingCount').textContent = stats.pending;
+                document.getElementById('preparingCount').textContent = stats.preparing;
+                document.getElementById('readyCount').textContent = stats.ready;
+                document.getElementById('avgTime').textContent = stats.avgPrepTime || 0;
+            } catch (e) {}
+        }
+        
+        function updateStats() {
+            const pending = orders.filter(o => o.status === 'pending').length;
+            const preparing = orders.filter(o => o.status === 'preparing').length;
+            const ready = orders.filter(o => o.status === 'ready').length;
+            
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('preparingCount').textContent = preparing;
+            document.getElementById('readyCount').textContent = ready;
+        }
+        
+        function renderOrders() {
+            const grid = document.getElementById('ordersGrid');
+            let filtered = orders;
+            
+            if (currentFilter !== 'all') {
+                filtered = orders.filter(o => o.status === currentFilter);
+            }
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🍕</div>
+                        <h2>No ${currentFilter === 'all' ? 'Active' : currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Orders</h2>
+                        <p>${currentFilter === 'all' ? 'New orders will appear here automatically' : 'No orders with this status'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = filtered.map(order => {
+                const elapsed = getElapsedTime(order.created_at);
+                const elapsedClass = elapsed > 15 ? 'over-15' : '';
+                
+                let actionBtn = '';
+                if (order.status === 'pending') {
+                    actionBtn = `<button class="btn btn-start" onclick="startOrder(${order.id})">Start</button>`;
+                } else if (order.status === 'preparing') {
+                    actionBtn = `<button class="btn btn-ready" onclick="readyOrder(${order.id})">Ready</button>`;
+                } else if (order.status === 'ready') {
+                    actionBtn = `<button class="btn btn-complete" onclick="completeOrder(${order.id})">Complete</button>`;
+                }
+                
+                const itemsHtml = order.items.map(item => {
+                    let details = [];
+                    if (item.pizza_name) details.push(`<span>Pizza: ${item.pizza_name}</span>`);
+                    if (item.size_id) details.push(`<span>Size: ${getOptionName('sizes', item.size_id)}</span>`);
+                    if (item.crust_id) details.push(`<span>Crust: ${getOptionName('crusts', item.crust_id)}</span>`);
+                    if (item.toppings) {
+                        const toppingIds = JSON.parse(item.toppings);
+                        if (toppingIds.length > 0) {
+                            const names = toppingIds.map(id => getOptionName('toppings', id)).filter(n => n).join(', ');
+                            if (names) details.push(`<span>Toppings: ${names}</span>`);
+                        }
+                    }
+                    
+                    return `
+                        <div class="order-item">
+                            <div class="item-name">${item.pizza_name || 'Custom Pizza'} x${item.quantity}</div>
+                            <div class="item-details">${details.join('')}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                return `
+                    <div class="order-card ${order.status}">
+                        <div class="order-header">
+                            <span class="order-id">#${order.id}</span>
+                            <span class="order-status status-${order.status}">${order.status}</span>
+                        </div>
+                        <div class="order-info">
+                            <span>Type: <span class="value">${order.order_type}</span></span>
+                            ${order.first_name ? `<span>Customer: <span class="value">${order.first_name}</span></span>` : ''}
+                        </div>
+                        <div class="order-items">${itemsHtml}</div>
+                        <div class="order-footer">
+                            <div class="time-elapsed ${elapsedClass}">
+                                Time: <span class="time">${elapsed} min</span>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-bump" onclick="bumpOrder(${order.id})">Bump</button>
+                                ${actionBtn}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        async function startOrder(id) {
+            await fetch(`${API}/orders/${id}/start`, { method: 'PATCH' });
+            fetchOrders();
+            fetchStats();
+        }
+        
+        async function readyOrder(id) {
+            await fetch(`${API}/orders/${id}/ready`, { method: 'PATCH' });
+            fetchOrders();
+            fetchStats();
+        }
+        
+        async function completeOrder(id) {
+            await fetch(`${API}/orders/${id}/complete`, { method: 'PATCH' });
+            fetchOrders();
+            fetchStats();
+        }
+        
+        async function bumpOrder(id) {
+            await fetch(`${API}/orders/${id}/next`, { method: 'PATCH' });
+            fetchOrders();
+            fetchStats();
+        }
+        
+        function getElapsedTime(createdAt) {
+            const created = new Date(createdAt);
+            const now = new Date();
+            const diff = Math.floor((now - created) / 60000);
+            return diff;
+        }
+        
+        function getOptionName(type, id) {
+            return '';
+        }
+        
+        function playSound() {
+            if (!soundEnabled) return;
+            try {
+                const audio = document.getElementById('newOrderSound');
+                audio.currentTime = 0;
+                audio.play().catch(() => {});
+            } catch (e) {}
+        }
+        
+        function setConnectionStatus(online) {
+            const el = document.getElementById('connectionStatus');
+            el.className = 'connection-status ' + (online ? 'online' : 'offline');
+            el.textContent = online ? 'Connected' : 'Disconnected - Retrying...';
+        }
+        
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString();
+        }
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderOrders();
+            });
+        });
+        
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.textContent = soundEnabled ? '🔔' : '🔕';
+            this.classList.toggle('muted', !soundEnabled);
+        });
+        
+        setInterval(fetchOrders, 3000);
+        setInterval(fetchStats, 10000);
+        setInterval(updateClock, 1000);
+        
+        fetchOrders();
+        fetchStats();
+        updateClock();
+    </script>
+</body>
+</html>
