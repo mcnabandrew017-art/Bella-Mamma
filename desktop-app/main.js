@@ -1,21 +1,34 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { spawn } = require('child_process');
 const http = require('http');
 
 let mainWindow;
 let backendProcess;
 let backendUrl = 'http://localhost:3000';
-
-const START_DELAY = 3000;
+const isDev = !app.isPackaged;
 
 function startBackend() {
-    console.log('Starting backend server...');
+    console.log('Starting Bella Mamma backend...');
     
-    backendProcess = spawn('node', ['backend/src/index.js'], {
-        cwd: path.join(__dirname, '..'),
+    let backendPath;
+    if (isDev) {
+        backendPath = path.join(__dirname, '..', 'backend', 'src', 'index.js');
+    } else {
+        backendPath = path.join(process.resourcesPath, 'backend', 'src', 'index.js');
+    }
+    
+    if (!fs.existsSync(backendPath)) {
+        console.error('Backend not found:', backendPath);
+        return;
+    }
+    
+    backendProcess = spawn('node', [backendPath], {
+        cwd: path.dirname(backendPath),
         stdio: 'inherit',
-        shell: true
+        shell: true,
+        env: { ...process.env, PORT: '3000' }
     });
 
     backendProcess.on('error', (err) => {
@@ -23,40 +36,47 @@ function startBackend() {
     });
 
     backendProcess.on('close', (code) => {
-        console.log(`Backend process exited with code ${code}`);
+        console.log(`Backend exited with code ${code}`);
     });
 
     console.log('Waiting for backend to start...');
-    setTimeout(() => {
-        checkBackend();
-    }, START_DELAY);
+    setTimeout(checkBackend, 3000);
 }
 
 function checkBackend() {
-    http.get(backendUrl, (res) => {
+    http.get(`${backendUrl}/api/health`, (res) => {
         if (res.statusCode === 200) {
-            console.log('Backend is running at', backendUrl);
-            mainWindow.webContents.send('backend-ready', backendUrl);
+            console.log('Backend ready!');
+            if (mainWindow) {
+                mainWindow.webContents.send('backend-ready', backendUrl);
+            }
         }
     }).on('error', () => {
-        console.log('Backend not ready yet, retrying...');
         setTimeout(checkBackend, 1000);
     });
 }
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
+        width: 1300,
+        height: 900,
+        minWidth: 900,
+        minHeight: 600,
+        icon: isDev ? path.join(__dirname, 'icon.png') : path.join(process.resourcesPath, 'icon.png'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js')
         },
-        title: 'Bella Mamma - Order Manager'
+        title: 'Bella Mamma - Order Manager',
+        show: false
     });
 
     mainWindow.loadFile(path.join(__dirname, 'renderer.html'));
+
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show();
+    });
 
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -68,12 +88,15 @@ function createWindow() {
             submenu: [
                 {
                     label: 'Open Website',
-                    click: () => {
-                        require('electron').shell.openExternal(backendUrl);
-                    }
+                    accelerator: 'CmdOrCtrl+O',
+                    click: () => shell.openExternal(backendUrl)
                 },
                 { type: 'separator' },
-                { role: 'quit' }
+                {
+                    label: 'Exit',
+                    accelerator: 'CmdOrCtrl+Q',
+                    click: () => app.quit()
+                }
             ]
         },
         {
@@ -82,9 +105,9 @@ function createWindow() {
                 { role: 'reload' },
                 { role: 'toggleDevTools' },
                 { type: 'separator' },
-                { role: 'resetZoom' },
                 { role: 'zoomIn' },
                 { role: 'zoomOut' },
+                { role: 'resetZoom' },
                 { type: 'separator' },
                 { role: 'togglefullscreen' }
             ]
@@ -94,17 +117,48 @@ function createWindow() {
             submenu: [
                 {
                     label: 'Refresh Orders',
-                    accelerator: 'CmdOrCtrl+R',
+                    accelerator: 'F5',
                     click: () => {
-                        mainWindow.webContents.send('refresh-orders');
+                        if (mainWindow) {
+                            mainWindow.webContents.send('refresh-orders');
+                        }
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Show Pending',
+                    click: () => {
+                        if (mainWindow) mainWindow.webContents.send('filter-status', 'pending');
+                    }
+                },
+                {
+                    label: 'Show All',
+                    click: () => {
+                        if (mainWindow) mainWindow.webContents.send('filter-status', 'all');
+                    }
+                }
+            ]
+        },
+        {
+            label: 'Help',
+            submenu: [
+                {
+                    label: 'About Bella Mamma',
+                    click: () => {
+                        const { dialog } = require('electron');
+                        dialog.showMessageBox(mainWindow, {
+                            type: 'info',
+                            title: 'About Bella Mamma',
+                            message: 'Bella Mamma - Order Manager',
+                            detail: 'Version 1.0.0\n\nA desktop app for managing pizza orders.'
+                        });
                     }
                 }
             ]
         }
     ];
 
-    const menu = Menu.buildFromTemplate(menuTemplate);
-    Menu.setApplicationMenu(menu);
+    Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
 }
 
 app.whenReady().then(() => {
@@ -139,26 +193,48 @@ ipcMain.handle('get-orders', async () => {
                     resolve([]);
                 }
             });
-        }).on('error', reject);
+        }).on('error', () => resolve([]));
+    });
+});
+
+ipcMain.handle('get-kitchen-orders', async () => {
+    return new Promise((resolve, reject) => {
+        http.get(`${backendUrl}/api/kitchen`, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    resolve(JSON.parse(data));
+                } catch (e) {
+                    resolve([]);
+                }
+            });
+        }).on('error', () => resolve([]));
     });
 });
 
 ipcMain.handle('update-order-status', async (event, orderId, status) => {
     return new Promise((resolve, reject) => {
-        const data = JSON.stringify({ status });
+        const postData = JSON.stringify({ status });
         const req = http.request(`${backendUrl}/api/orders/${orderId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Content-Length': data.length
+                'Content-Length': Buffer.byteLength(postData)
             }
         }, (res) => {
-            let responseData = '';
-            res.on('data', chunk => responseData += chunk);
-            res.on('end', () => resolve(JSON.parse(responseData)));
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    resolve(JSON.parse(data));
+                } catch (e) {
+                    resolve({ success: true });
+                }
+            });
         });
         req.on('error', reject);
-        req.write(data);
+        req.write(postData);
         req.end();
     });
 });
