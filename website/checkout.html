@@ -410,13 +410,17 @@
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
             const orderData = {
-                customer: { name, phone, email, address },
+                customer: { 
+                    first_name: name.split(' ')[0] || name,
+                    last_name: name.split(' ').slice(1).join(' ') || '',
+                    email: email,
+                    phone: phone,
+                    street_address: address
+                },
                 items: cart,
-                total: total,
                 orderType: orderType,
                 paymentMethod: selectedPayment,
-                notes: notes,
-                status: 'pending'
+                notes: notes
             };
 
             try {
